@@ -1,0 +1,77 @@
+<script type="text/javascript">
+    var tweetSearchViewModel;
+
+    function TweetSearchViewModel () {
+        var self = this;
+
+        self.SearchText = ko.observable("");
+        self.Tweets = ko.observableArray();
+
+        self.SearchTweets = function () {
+            self.Tweets.removeAll();
+
+            $.ajax({
+                url: "/search_tweets",
+                type: "GET",
+                data: {"search" : encodeURIComponent(self.SearchText()) + encodeURIComponent(" :]") }
+            }).done(function (data){
+                for (var i = 0; i < data.statuses.length; i++)
+                {
+                    var tweet = data.statuses[i];
+                    if (tweet.text.indexOf(":)") !== -1 || tweet.text.indexOf("(:") !== -1) {
+                        tweet.mood = "Happy";
+                    } else if (tweet.text.indexOf(":(") !== -1 || tweet.text.indexOf("):") !== -1) {
+                        tweet.mood = "Sad";    
+                    } else {
+                        tweet.mood = "unknown"
+                    }
+                    self.Tweets.push(tweet);
+                }
+            });
+
+            $.ajax({
+                url: "/search_tweets",
+                type: "GET",
+                data: {"search" : encodeURIComponent(self.SearchText()) + encodeURIComponent(" :[") }
+            }).done(function (data) {
+                for (var i = 0; i < data.statuses.length; i++)
+                {
+                    var tweet = data.statuses[i];
+                    if (tweet.text.indexOf(":)") !== -1 || tweet.text.indexOf("(:") !== -1) {
+                        tweet.mood = "Happy";
+                    } else if (tweet.text.indexOf(":(") !== -1 || tweet.text.indexOf("):") !== -1) {
+                        tweet.mood = "Sad";    
+                    } else {
+                        tweet.mood = "unknown"
+                    }             
+                    self.Tweets.push(tweet);
+                }
+            });
+        };
+    }
+    
+    $(document).ready(function () {
+        tweetSearchViewModel = new TweetSearchViewModel();
+        ko.applyBindings(tweetSearchViewModel);
+    });
+</script>
+
+<h2>Tweet Search</h2>
+
+<input type="text" class="input-medium search-query" data-bind="value: SearchText, valueUpdate: 'afterkeydown'" />
+<button type="button" class="btn" data-bind="click: SearchTweets">Search</button>
+
+<table class="table table-striped">
+    <thead>
+        <tr>
+            <th>Tweet</th>
+            <th>Mood</th>
+        </tr>
+    </thead>
+    <tbody data-bind="foreach: Tweets">
+        <tr>
+            <td data-bind="text: text"></td>
+            <td data-bind="text: mood"></td>
+        </tr>
+    </tbody>
+</table>
